@@ -2,8 +2,7 @@
 
 import pandas as pd
 import os
-import tkinter
-from tkinter import filedialog
+from tkinter import filedialog, Tk
 import re
 
 class TerminationStringNotFound(Exception):
@@ -22,7 +21,7 @@ def get_header(file):
         return file_line1[:(match.span()[1])]
     else:
         raise TerminationStringNotFound("The propper termination string was not found in the file header")
-        breakpoint
+
 
 def header_cull(header_str):
     #Takes the full header and returns an array for each elemet in the header with descriptors and whitespace removed
@@ -33,6 +32,10 @@ def string_cleaning(str):
 def string_cleaning_numbers(str):
     #Use to clean values that are presented "as is" in the fits header
     return str.split('=')[-1].strip()
+def object_find(name, index):
+    match = re.search(name, index)
+    if match:
+        return(index)
 
 def get_data(header,file_name,comment):
     for i in header:
@@ -77,23 +80,24 @@ def get_data(header,file_name,comment):
 
         filter_match = re.search("FILTER", i)
         if filter_match:
-            _f = (string_cleaning(i))
+            _f = (string_cleaning_numbers(i)[1:-3])
         
         exp_match = re.search("EXPOSURE", i) #or re.search("EXPTIME", i)
         if exp_match:
             _exp = (float(string_cleaning_numbers(i)))
+
     _name = file_name.split("/")[-1]
     _comm = comment
+
     return [_Ra,_Dec,_date,_time,_lst,_amass,_scope,_inst,_f,_exp,_name,_comm]
 
 
 
 # Start of the Main Program===============================================
 os.system('cls' if os.name=='nt' else 'clear')
-print("FITs File header reader ver. 0.0.2")
+print("FITs File header reader ver. 0.0.3")
 comment=input("Default comment for all observations: ")
-if os.name=='nt':
-	tkinter.Tk().withdraw() # prevents an empty tkinter window from appearing
+Tk().withdraw() # prevents an empty tkinter window from appearing
 
 file_list = filedialog.askopenfilenames()
 
@@ -106,4 +110,7 @@ for j in range(len(file_list)):
 ObsLog = pd.DataFrame(data=data,columns=['Ra','Dec','UT_date','UT_time','LST','AirMass','Telescope','Instrument','Filter','Exp_time','File_name','Comment'])
 print(ObsLog)
 save_loc = filedialog.asksaveasfilename(filetypes=[('CSV','*.csv')],defaultextension='.csv')
-ObsLog.to_csv(save_loc)
+if save_loc == '':
+    breakpoint
+else:
+    ObsLog.to_csv(save_loc)
