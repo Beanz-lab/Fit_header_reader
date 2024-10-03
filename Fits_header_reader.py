@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 
 import pandas as pd
 import os
@@ -90,9 +90,10 @@ def get_data(header,file_name,comment):
 
 # Start of the Main Program===============================================
 os.system('cls' if os.name=='nt' else 'clear')
-print("FITs File header reader ver. 0.0.1")
+print("FITs File header reader ver. 0.0.2")
 comment=input("Default comment for all observations: ")
-tkinter.Tk().withdraw() # prevents an empty tkinter window from appearing
+if os.name=='nt':
+	tkinter.Tk().withdraw() # prevents an empty tkinter window from appearing
 
 file_list = filedialog.askopenfilenames()
 
