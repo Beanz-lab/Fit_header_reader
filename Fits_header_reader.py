@@ -3,7 +3,7 @@
 import pandas as pd
 import os
 from tkinter import filedialog, Tk
-import re
+from re import search
 
 class TerminationStringNotFound(Exception):
     def __init__(self, message):
@@ -16,7 +16,7 @@ class TerminationStringNotFound(Exception):
 def get_header(file):
     full_file=open(file, 'r', errors='ignore')
     file_line1=full_file.readline()
-    match=re.search(" END ", file_line1)
+    match=search(" END ", file_line1)
     if match:
         return file_line1[:(match.span()[1])]
     else:
@@ -33,26 +33,27 @@ def string_cleaning_numbers(str):
     #Use to clean values that are presented "as is" in the fits header
     return str.split('=')[-1].strip()
 def object_find(name, index):
-    match = re.search(name, index)
+    match = search(name, index)
     if match:
         return(index)
 
 def get_data(header,file_name,comment):
+    _Ra,_Dec,_date,_time,_lst,_amass,_scope,_inst,_f,_exp,_name,_comm=[None,None,None,None,None,None,None,None,None,None,None,None]
     for i in header:
-        ra_match = re.search("OBJCTRA", i)
+        ra_match = search("OBJCTRA", i)
         if ra_match:
             _Ra = string_cleaning(i)
             _Ra_split = _Ra.split() #used to calculate LST later
 
-        dec_match = re.search("OBJCTDEC", i)
+        dec_match = search("OBJCTDEC", i)
         if dec_match:
             _Dec = string_cleaning(i)
-            
-        date_match = re.search("DATE-OBS", i)
+        
+        date_match = search("DATE-OBS", i)
         if date_match:
             _date,_time=string_cleaning(i).split("T")
 
-        lst_match = re.search("OBJCTHA", i)
+        lst_match = search("OBJCTHA", i)
         if lst_match:
             _hr, _hr_remainder=string_cleaning(i).split('.')
             _min, _min_remainder=str(float('0.'+_hr_remainder)*60).split('.')
@@ -66,23 +67,23 @@ def get_data(header,file_name,comment):
                 _min=_min-1                                                                                            # -----------------------
             _lst = ("%i:%i:%0.3f" % (_hr, _min, _sec))                                                                 # -----------------------
 
-        amass_match = re.search("AIRMASS", i)
+        amass_match = search("AIRMASS", i)
         if amass_match:
             _amass = (float(string_cleaning_numbers(i)))
 
-        tscope_match = re.search("TELESCOP", i)
+        tscope_match = search("TELESCOP", i)
         if tscope_match:
             _scope = (string_cleaning(i))
 
-        inst_match = re.search("INSTRUME", i)
+        inst_match = search("INSTRUME", i)
         if inst_match:
             _inst = (string_cleaning(i))
 
-        filter_match = re.search("FILTER", i)
+        filter_match = search("FILTER", i)
         if filter_match:
             _f = (string_cleaning_numbers(i)[1:-3])
         
-        exp_match = re.search("EXPOSURE", i) #or re.search("EXPTIME", i)
+        exp_match = search("EXPOSURE", i) #or search("EXPTIME", i)
         if exp_match:
             _exp = (float(string_cleaning_numbers(i)))
 
@@ -95,7 +96,7 @@ def get_data(header,file_name,comment):
 
 # Start of the Main Program===============================================
 os.system('cls' if os.name=='nt' else 'clear')
-print("FITs File header reader ver. 0.0.3")
+print("FITs File header reader ver. 0.0.5")
 comment=input("Default comment for all observations: ")
 Tk().withdraw() # prevents an empty tkinter window from appearing
 
