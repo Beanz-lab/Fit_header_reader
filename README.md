@@ -1,5 +1,5 @@
 # Fit_header_reader
-For Astron 1263, to automatically create observation logs for fits header data
+For Astron 1263, to automatically create observation logs from fits header data
 
 ## How to use  
 I've had trouble with running the program from VScode, but opening directly from the terminal seems to work  
