@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pandas as pd
+from pandas import DataFrame
 import os
 from tkinter import filedialog, Tk
 from re import search
@@ -14,8 +14,11 @@ class TerminationStringNotFound(Exception):
 
 
 def get_header(file):
+    #Headers should be contained in the first line of the file
+    #Searches the first line for END and returns the header as a string
     full_file=open(file, 'r', errors='ignore')
     file_line1=full_file.readline()
+    full_file.close
     match=search(" END ", file_line1)
     if match:
         return file_line1[:(match.span()[1])]
@@ -25,6 +28,7 @@ def get_header(file):
 
 def header_cull(header_str):
     #Takes the full header and returns an array for each elemet in the header with descriptors and whitespace removed
+    #Each object in the header is 80 characters long and the text descriptors appear after "/"
     return([(" ".join(header_str[i:i+80].split())).split("/")[0] for i in range(0, len(header_str), 80)])
 def string_cleaning(str):
     #Use to clean up values that are surrounded by ' ' in the fits header
@@ -32,18 +36,18 @@ def string_cleaning(str):
 def string_cleaning_numbers(str):
     #Use to clean values that are presented "as is" in the fits header
     return str.split('=')[-1].strip()
-def object_find(name, index):
-    match = search(name, index)
-    if match:
-        return(index)
+#def object_find(name, index):
+#    match = search(name, index)
+#    if match:
+#        return(index)
 
 def get_data(header,file_name,comment):
     _Ra,_Dec,_date,_time,_lst,_amass,_scope,_inst,_f,_exp,_name,_comm=[None,None,None,None,None,None,None,None,None,None,None,None]
     for i in header:
         ra_match = search("OBJCTRA", i)
         if ra_match:
+            _Ra_split = string_cleaning(i).split() #used to calculate LST later
             _Ra = string_cleaning(i)
-            _Ra_split = _Ra.split() #used to calculate LST later
 
         dec_match = search("OBJCTDEC", i)
         if dec_match:
@@ -51,7 +55,8 @@ def get_data(header,file_name,comment):
         
         date_match = search("DATE-OBS", i)
         if date_match:
-            _date,_time=string_cleaning(i).split("T")
+            _date = "'"+string_cleaning(i).split("T")[0]
+            _time = "'"+string_cleaning(i).split("T")[1]
 
         lst_match = search("OBJCTHA", i)
         if lst_match:
@@ -65,27 +70,27 @@ def get_data(header,file_name,comment):
             if _min > 60:                                                                                              # -----------------------
                 _hr=_hr+1                                                                                              # -----------------------
                 _min=_min-1                                                                                            # -----------------------
-            _lst = ("%i:%i:%0.3f" % (_hr, _min, _sec))                                                                 # -----------------------
+            _lst = str("'%i:%i:%0.3f" % (_hr, _min, _sec))                                                                 # -----------------------
 
         amass_match = search("AIRMASS", i)
         if amass_match:
-            _amass = (float(string_cleaning_numbers(i)))
+            _amass = string_cleaning_numbers(i)
 
         tscope_match = search("TELESCOP", i)
         if tscope_match:
-            _scope = (string_cleaning(i))
+            _scope = string_cleaning(i)
 
         inst_match = search("INSTRUME", i)
         if inst_match:
-            _inst = (string_cleaning(i))
+            _inst = string_cleaning(i)
 
         filter_match = search("FILTER", i)
         if filter_match:
-            _f = (string_cleaning_numbers(i)[1:-3])
+            _f = string_cleaning_numbers(i)[1:-3]
         
         exp_match = search("EXPOSURE", i) #or search("EXPTIME", i)
         if exp_match:
-            _exp = (float(string_cleaning_numbers(i)))
+            _exp = string_cleaning_numbers(i)
 
     _name = file_name.split("/")[-1]
     _comm = comment
@@ -96,7 +101,7 @@ def get_data(header,file_name,comment):
 
 # Start of the Main Program===============================================
 os.system('cls' if os.name=='nt' else 'clear')
-print("FITs File header reader ver. 0.0.5")
+print("FITs File header reader ver. 0.0.6")
 comment=input("Default comment for all observations: ")
 Tk().withdraw() # prevents an empty tkinter window from appearing
 
@@ -105,11 +110,12 @@ file_list = filedialog.askopenfilenames()
 data=[]
 for j in range(len(file_list)):
     header = get_header(file_list[j])
-    header_split=header_cull(header)
+    header_split = header_cull(header)
     data.append(get_data(header=header_split,file_name=file_list[j],comment=comment))
 
-ObsLog = pd.DataFrame(data=data,columns=['Ra','Dec','UT_date','UT_time','LST','AirMass','Telescope','Instrument','Filter','Exp_time','File_name','Comment'])
-print(ObsLog)
+
+ObsLog = DataFrame(data=data,columns=['Ra','Dec','UT_date','UT_time','LST','AirMass','Telescope','Instrument','Filter','Exp_time','File_name','Comment'])
+print(ObsLog.to_string())
 save_loc = filedialog.asksaveasfilename(filetypes=[('CSV','*.csv')],defaultextension='.csv')
 if save_loc == '':
     breakpoint
