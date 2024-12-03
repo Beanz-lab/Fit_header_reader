@@ -25,7 +25,6 @@ def get_header(file):
     else:
         raise TerminationStringNotFound("The propper termination string was not found in the file header")
 
-
 def header_cull(header_str):
     #Takes the full header and returns an array for each elemet in the header with descriptors and whitespace removed
     #Each object in the header is 80 characters long and the text descriptors appear after "/"
@@ -36,10 +35,6 @@ def string_cleaning(str):
 def string_cleaning_numbers(str):
     #Use to clean values that are presented "as is" in the fits header
     return str.split('=')[-1].strip()
-#def object_find(name, index):
-#    match = search(name, index)
-#    if match:
-#        return(index)
 
 def get_data(header,file_name,comment):
     _Ra,_Dec,_date,_time,_lst,_amass,_scope,_inst,_f,_exp,_name,_comm=[None,None,None,None,None,None,None,None,None,None,None,None]
@@ -64,13 +59,13 @@ def get_data(header,file_name,comment):
             _min, _min_remainder=str(float('0.'+_hr_remainder)*60).split('.')
             _sec=float('0.'+_min_remainder)*60
             _hr,_min,_sec = [int(_Ra_split[0]) + int(_hr), int(_Ra_split[1]) + int(_min), float(_Ra_split[2]) + _sec ] # This will fail if RA  
-            if _sec > 60:                                                                                              # is not found first
+            if _sec >= 60:                                                                                             # is not found first
                 _min=_min+1                                                                                            # and should be taken 
                 _sec=_sec-60                                                                                           # outside of the for loop
-            if _min > 60:                                                                                              # -----------------------
+            if _min >= 60:                                                                                             # -----------------------
                 _hr=_hr+1                                                                                              # -----------------------
-                _min=_min-1                                                                                            # -----------------------
-            _lst = str("'%i:%i:%0.3f" % (_hr, _min, _sec))                                                                 # -----------------------
+                _min=_min-60                                                                                           # -----------------------
+            _lst = str("'%i:%i:%0.3f" % (_hr, _min, _sec))                                                             # -----------------------
 
         amass_match = search("AIRMASS", i)
         if amass_match:
@@ -101,7 +96,7 @@ def get_data(header,file_name,comment):
 
 # Start of the Main Program===============================================
 os.system('cls' if os.name=='nt' else 'clear')
-print("FITs File header reader ver. 0.0.6")
+print("FITs File header reader ver. 0.1.0")
 comment=input("Default comment for all observations: ")
 Tk().withdraw() # prevents an empty tkinter window from appearing
 
